@@ -9,11 +9,13 @@ import {
 } from "react-icons/ai";
 import { FcGoogle } from "react-icons/fc";
 import { styles } from "../../../app/styles/style";
+import { useRegisterMutation } from "@/redux/features/auth/authApi";
+import { toast } from "react-hot-toast";
 
 type Props = {
   setRoute: (route: string) => void;
 };
-// Define the schema for the form validation
+
 const schema = Yup.object().shape({
   name: Yup.string().required("Please enter your name!"),
   email: Yup.string()
@@ -24,6 +26,24 @@ const schema = Yup.object().shape({
 
 const Signup: FC<Props> = ({ setRoute }) => {
   const [show, setShow] = useState(false);
+  const [register, { data, error, isSuccess }] = useRegisterMutation();
+
+  useEffect(() => {
+    if (isSuccess) {
+      const message = data.message || "Registration successful";
+      toast.success(message);
+      setRoute("Verification");
+    }
+    if (error) {
+      if ("data" in error) {
+        const errorData = error as any;
+        toast.error("Email Already Exist  ");
+      } else {
+        toast.error("An error occurred");
+      }
+    }
+  }, [isSuccess, error]);
+
   const formik = useFormik({
     initialValues: { name: "", email: "", password: "" },
     validationSchema: schema,
@@ -33,10 +53,12 @@ const Signup: FC<Props> = ({ setRoute }) => {
         email,
         password,
       };
-      setRoute("Verification");
+      await register(data);
     },
   });
+
   const { errors, touched, values, handleChange, handleSubmit } = formik;
+
   return (
     <div className="w-full">
       <h1 className={`${styles.title}`}>Join to ELearning</h1>
@@ -51,7 +73,7 @@ const Signup: FC<Props> = ({ setRoute }) => {
             value={values.name}
             onChange={handleChange}
             id="name"
-            placeholder="Enter your Name"
+            placeholder="johndoe"
             className={`${errors.name && touched.name && "border-red-500"} ${
               styles.input
             }`}
@@ -69,7 +91,7 @@ const Signup: FC<Props> = ({ setRoute }) => {
           value={values.email}
           onChange={handleChange}
           id="email"
-          placeholder="Enter your Email"
+          placeholder="loginmail@gmail.com"
           className={`${errors.email && touched.email && "border-red-500"} ${
             styles.input
           }`}
@@ -87,7 +109,7 @@ const Signup: FC<Props> = ({ setRoute }) => {
             value={values.password}
             onChange={handleChange}
             id="password"
-            placeholder="Enter Your Password"
+            placeholder="password!@%"
             className={`${
               errors.password && touched.password && "border-red-500"
             } ${styles.input}`}
